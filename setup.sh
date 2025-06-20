@@ -9,4 +9,15 @@ test_user() {
 	fi
 }
 
+install_update() {
+	echo "Atualizando pacotes e instalando o dhcp-server."
+	apt update &>/dev/null
+	apt install isc-dhcp-server -y &>/dev/null
+}
+
+menu_select() {
+	read -p ""
+}
+
 test_user
+
