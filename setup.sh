@@ -28,7 +28,6 @@ subnet $SUBNET netmask $NETMASK {
 }
 
 EOF
-
 }
 
 restart_dhcpd() {
