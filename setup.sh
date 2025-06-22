@@ -1,6 +1,7 @@
 #!/bin/bash
 
 USERID=$( id -u )
+NETMASK="255.255.255.0"
 
 test_user() {
 	if [ "$USERID" -ne "0" ]; then
@@ -15,16 +16,23 @@ install_update() {
 	apt install isc-dhcp-server -y &>/dev/null
 }
 
+cidr_translation() {
+	CIDR=$( echo $SUBNET | sed s/0/$INIT_RANGE/ )
+	INIT_RANGE=$CIDR
+	CIDR=$( echo $SUBNET | sed s/0/$END_RANGE/ )
+	END_RANGE=$CIDR
+}
+
 dhcpd_cfg() {
 	cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.bkp
-	cat > /etc/dhcp/dhcpd.cof << EOF
+	cat > /etc/dhcp/dhcpd.conf << EOF
 ddns-updates off;
 ddns-update-style none;
 
 subnet $SUBNET netmask $NETMASK {
-	range				"$INIT_RANGE" "$END_RANGE";
-	optionl routers			"$GATEWAY";
-	optinal domain-name-servers	"$DNS";
+	range				$INIT_RANGE $END_RANGE;
+	option routers			$GATEWAY;
+	option domain-name-servers	$DNS;
 }
 
 EOF
@@ -32,7 +40,7 @@ EOF
 
 restart_dhcpd() {
 	echo "Reinicializando o serviço."
-	systemctl restart isc-dhcpd-server.service
+	systemctl restart isc-dhcp-server.service
 	if [ $? -ne "0" ]; then
 		echo "Erro na reinicialização."
 		exit 1
@@ -40,15 +48,18 @@ restart_dhcpd() {
 }
 
 menu_main() {
-	echo "Começando a comfiguração de seu DHCP."
+	echo "Começando a comfiguração."
+	sleep 1
+	echo "Esse script aplica por padrão o CIDR /24 na subnet."
 	echo
-	read -p "subnet :" SUBNET
-	read -p "netmask :" NETMASK
+	read -p "subnet:	" SUBNET
+	read -p "gateway:	" GATEWAY
+	read -p "DNS:		" DNS
+	echo
+	echo "Informe apenas o último octeto."
 	read -p "Incio do range :" INIT_RANGE
 	read -p "Fim do range :" END_RANGE
-	read -p "gateway :" GATEWAY
-	read -p "DNS :" DNS
-
+	cidr_translation
 	dhcpd_cfg
 	
 }
