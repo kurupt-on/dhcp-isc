@@ -51,10 +51,6 @@ EOF
 	cat >> /etc/rsyslog.conf << EOF
 local7.*		/var/log/dhcpd-server.log
 EOF
-	echo
-	clear
-	echo "Finalizando a configuração."
-	sleep 1
 }
 
 restart_dhcpd() {
@@ -78,13 +74,12 @@ restart_bind() {
 }
 
 sync_on() {
-	[ "$AUTORITY_ON" = "y" ] && sed -i "2s/off/on/" /etc/dhcp/dhcpd.conf && sed -i "3s/none/interim/" /etc/dhcp/dhcpd.conf
-	[ "$AUTORITY_ON" != "y" ] && sed -i "1s/off/on/" /etc/dhcp/dhcpd.conf && sed -i "2s/none/interim/" /etc/dhcp/dhcpd.conf
 
-
-	read -p "O DNS está neste mesmo host?		[y p/ sim] " DNS_IN_HOST
+	read -p "O DNS está neste mesmo host?			[y p/ sim] " DNS_IN_HOST
 	if [ "$DNS_IN_HOST" = "y" ]; then
-		read -p "Criar uma nova key-rndc? 		[y p/ sim] " CREATE_RNDC
+		[ "$AUTORITY_ON" = "y" ] && sed -i "2s/off/on/" /etc/dhcp/dhcpd.conf && sed -i "3s/none/interim/" /etc/dhcp/dhcpd.conf
+		[ "$AUTORITY_ON" != "y" ] && sed -i "1s/off/on/" /etc/dhcp/dhcpd.conf && sed -i "2s/none/interim/" /etc/dhcp/dhcpd.conf
+		read -p "Criar uma nova key-rndc? 			[y p/ sim] " CREATE_RNDC
 		[ "$CREATE_RNDC" = "y" ] && rndc-confgen -a -b 512
 
 		grep "^key\b" /etc/bind/named.conf.options &>/dev/null
@@ -141,8 +136,33 @@ zone $ZONE_NAME {
 }
 EOF
 		
+		restart_bind
+	else
+		dns_out_host
 	fi	
-	dns_out_host
+}
+
+dns_out_host() {
+	clear
+	echo "configurando o ddns em outro host:"
+	sleep 1
+	echo
+	echo "No host com DNS:"
+	echo
+        echo '	Adcione o parâmetro "allow-update" na zona área da zona em 		/etc/bind/named.conf.local'
+	echo '	Adcione os parâmetros "key" e "controls" apontando para este host em	/etc/bind/named.conf.options'
+	echo '	Reinicie o named.'
+	echo
+	echo "Nesse host:"
+	echo "Faça as alterações no /etc/dhcp/dhcpd.conf"
+	echo
+	echo '	Modifique os parâmetros "ddns-update" para [on] e "ddns-update-style" para [interim]'
+	echo '	Adcione os parâmetros "key" e "zone"'
+	echo
+	while true; do
+		read -p "Digite [ok] para sair. " OUT
+		[ "$OUT" = "ok" ] && break 
+	done
 }
 
 menu_main() {
@@ -150,37 +170,40 @@ menu_main() {
 	echo "Começando a comfiguração."
 	sleep 1
 	echo
-	read -p "Este DHCP terá autóridade na rede?		[y p/ sim] " AUTORITY_ON
-	[ "$AUTORITY_ON" = "y" ] && echo "authoritative;" > /etc/dhcp/dhcpd.conf
-	echo
 	echo "Esse script aplica por padrão o CIDR /24 na subnet."
 	sleep 1
 	echo
-	read -p "subnet:		>" SUBNET
-	read -p "gateway:	>" GATEWAY
-	read -p "DNS:		>" DNS
+	read -p "subnet:		> " SUBNET
+	read -p "gateway:	> " GATEWAY
+	read -p "DNS:		> " DNS
 	echo
 
-	read -p "Adcionar domínio?	[y p/ sim] " DOMAIN_ON
-	read -p "Adcionar ntp-server?	[y p/ sim] " NTP_ON
+	read -p "Adcionar domínio?				[y p/ sim] " DOMAIN_ON
+	read -p "Adcionar ntp-server?				[y p/ sim] " NTP_ON
 	echo
-	[ "$DOMAIN_ON" = "y" ] && read -p "domain name	>" DOMAIN_NAME
-	[ "$NTP_ON" = "y" ] && read -p "ntp-server	>" IP_NTP
+	[ "$DOMAIN_ON" = "y" ] && read -p "domain name	> " DOMAIN_NAME
+	[ "$NTP_ON" = "y" ] && read -p "ntp-server	> " IP_NTP
 
 	echo
 	echo "Informe apenas o último octeto."
-	read -p "Incio do range 	$( echo $SUBNET | sed s/0//)" INIT_RANGE
-	read -p "Fim do range	$( echo $SUBNET | sed s/0// )" END_RANGE
+	read -p "Incio do range 	> $( echo $SUBNET | sed s/0//)" INIT_RANGE
+	read -p "Fim do range	> $( echo $SUBNET | sed s/0// )" END_RANGE
+	read -p "Este DHCP terá autóridade na rede?		[y p/ sim] " AUTORITY_ON
+	[ "$AUTORITY_ON" = "y" ] && echo "authoritative;" > /etc/dhcp/dhcpd.conf
 
 	cidr_translation
 	dhcpd_cfg
 
-	read -p "Ativar integração dinâmica com Bind?	[y p/ sim] " SYNC_ON
+	read -p "Ativar integração dinâmica com Bind?		[y p/ sim] " SYNC_ON
 	[ "$SYNC_ON" = "y" ] && sync_on
+
+	echo
+	clear
+	echo "Finalizando a configuração."
+	sleep 1
 }
 
 test_user
 menu_main
-restart_bind
 restart_dhcpd
 
