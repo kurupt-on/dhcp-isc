@@ -78,16 +78,37 @@ restart_bind() {
 }
 
 sync_on() {
-	sed -i "1s/off/on/" /etc/dhcp/dhcpd.conf
-	sed -i "2s/none/interim/" /etc/dhcp/dhcpd.conf
+	[ "$AUTORITY_ON" = "y" ] && sed -i "2s/off/on/" /etc/dhcp/dhcpd.conf && sed -i "3s/none/interim/" /etc/dhcp/dhcpd.conf
+	[ "$AUTORITY_ON" != "y" ] && sed -i "1s/off/on/" /etc/dhcp/dhcpd.conf && sed -i "2s/none/interim/" /etc/dhcp/dhcpd.conf
 
-	read -p "O DNS está neste mesmo host?" DNS_IN_HOST
+
+	read -p "O DNS está neste mesmo host?		[y p/ sim] " DNS_IN_HOST
 	if [ "$DNS_IN_HOST" = "y" ]; then
-		read -p "Criar uma nova key-rndc? 	[y p/ sim] " CREATE_RNDC
+		read -p "Criar uma nova key-rndc? 		[y p/ sim] " CREATE_RNDC
 		[ "$CREATE_RNDC" = "y" ] && rndc-confgen -a -b 512
+
+		grep "^key\b" /etc/bind/named.conf.options &>/dev/null
+		KEY_ON=$( echo $? )
+		if [ $KEY_ON -eq 0 ]; then
+			NUMBER_KEY=$( grep -n "^key\b" /etc/bind/named.conf.options | cut -d ":" -f 1 )
+			sed -i "${NUMBER_KEY}d" /etc/bind/named.conf.options	
+			sed -i "${NUMBER_KEY}d" /etc/bind/named.conf.options	
+			sed -i "${NUMBER_KEY}d" /etc/bind/named.conf.options	
+			sed -i "${NUMBER_KEY}d" /etc/bind/named.conf.options	
+		fi
 
 		cat /etc/bind/rndc.key >> /etc/dhcp/dhcpd.conf
 		cat /etc/bind/rndc.key >> /etc/bind/named.conf.options	
+
+		grep "^controls\b" /etc/bind/named.conf.options &>/dev/null
+		CONTROL_ON=$( echo $? )
+		if [ $CONTROL_ON -eq 0 ]; then
+			NUMBER_CONTROL=$( grep -n "^controls\b" /etc/bind/named.conf.options | cut -d ":" -f 1 )
+			sed -i "${NUMBER_CONTROL}d" /etc/bind/named.conf.options	
+			sed -i "${NUMBER_CONTROL}d" /etc/bind/named.conf.options	
+			sed -i "${NUMBER_CONTROL}d" /etc/bind/named.conf.options	
+			sed -i "${NUMBER_CONTROL}d" /etc/bind/named.conf.options	
+		fi
 
 		cat >> /etc/bind/named.conf.options << EOF
 controls {
@@ -95,11 +116,20 @@ controls {
 	allow { 127.0.0.1; } keys { "rndc-key"; };
 };
 EOF
-
 		read -p "Nome da zone: " ZONE_NAME
 		NUMBER_ZONE=$( grep -n "\"$ZONE_NAME\"" /etc/bind/named.conf.local | cut -d ":" -f 1 )
-		sed -i ""$NUMBER_ZONE"s/$/\n/" /etc/bind/named.conf.local
-		sed -i $(( $NUMBER_ZONE + 1 ))"s/^/\tallow-update { key rndc-key; };/" /etc/bind/named.conf.local
+		grep "allow-update" /etc/bind/named.conf.local &>/dev/null
+		ALLOW_UPT_ON=$( echo $?)
+
+		if [ $ALLOW_UPT_ON -eq 0 ]; then
+			NUMBER_ALLOW_UPT=$( grep -n "allow-update" /etc/bind/named.conf.local | cut -d ":" -f 1 )
+			sed -i "${NUMBER_ALLOW_UPT}s/{ .*; };/{ key rndc-key; };/" /etc/bind/named.conf.local
+		else
+			sed -i "${NUMBER_ZONE}s/$/\n/" /etc/bind/named.conf.local
+			sed -i $(( $NUMBER_ZONE + 1 ))"s/^/\tallow-update { key rndc-key; };/" /etc/bind/named.conf.local
+
+		fi
+
 
 		>> /etc/dhcp/dhcpd.conf
 
@@ -112,6 +142,7 @@ zone $ZONE_NAME {
 EOF
 		
 	fi	
+	dns_out_host
 }
 
 menu_main() {
