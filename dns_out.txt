@@ -1,0 +1,19 @@
+Configurando DNS Dinâmico (DDNS) com o DNS em Outro Host
+
+No host com DNS:
+
+	* Adicione a diretiva "allow-update" com o parâmetro "{ key rndc-key; };" na zona em /etc/bind/named.conf.local.
+	* Adicione uma diretiva "key" usando "cat /etc/bind/rndc.key >> /etc/bind/named.conf.options" para utilizar uma chave existente,
+	  ou crie uma nova com "rndc-confgen -a -b 512".
+	* Adicione uma diretiva "controls" também em /etc/bind/named.conf.options para especificar quem pode realizar configurações remotas.
+	  Exemplo: controls { inet 127.0.0.1 port 953 allow { 127.0.0.1; } keys { "rndc-key"; }; };
+	* Reinicie o serviço named: systemctl restart named
+
+Neste host (DHCP):
+
+	* Modifique o parâmetro "ddns-update" para "on" e "ddns-update-style" para "interim" em /etc/dhcp/dhcpd.conf.
+	* Adicione a mesma diretiva "key" criada no host DNS em /etc/bind/named.conf.options.
+	* Adicione uma diretiva "zone" correspondente à zona configurada em /etc/bind/named.conf.local no host DNS.
+	  Exemplo: zone exemplo.com { primary <IP_DO_DNS>; key rndc-key; }
+	* Reinicie o serviço isc-dhcp-server: systemctl restart isc-dhcp-server
+
