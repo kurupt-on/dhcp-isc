@@ -164,7 +164,9 @@ dns_out_host() {
 
 default_cfg() {
 	echo "informe a interface que será utilizada pelo script:"
-	ip l
+	echo
+	ip l | grep "^[[:digit:]]" | cut -d":" -f 2 | tr "\n" " "
+	echo
 	echo
 	read -p "Interface: " IFACE
 
@@ -185,18 +187,17 @@ menu_main() {
 	read -p "gateway:	> " GATEWAY
 	read -p "DNS:		> " DNS
 	echo
-
+	echo "Informe apenas o último octeto do range."
+	echo
+	read -p "Incio do range 	> $( echo $SUBNET | sed s/0$//)" INIT_RANGE
+	read -p "Fim do range	> $( echo $SUBNET | sed s/0$// )" END_RANGE
+	echo
 	read -p "Adcionar domínio?				[y p/ sim] " DOMAIN_ON
 	read -p "Adcionar ntp-server?				[y p/ sim] " NTP_ON
 	echo
 	[ "$DOMAIN_ON" = "y" ] && read -p "domain name	> " DOMAIN_NAME
 	[ "$NTP_ON" = "y" ] && read -p "ntp-server	> " IP_NTP
-
 	echo
-	echo "Informe apenas o último octeto do range."
-	echo
-	read -p "Incio do range 	> $( echo $SUBNET | sed s/0//)" INIT_RANGE
-	read -p "Fim do range	> $( echo $SUBNET | sed s/0// )" END_RANGE
 	read -p "Este DHCP terá autóridade na rede?		[y p/ sim] " AUTORITY_ON
 	[ "$AUTORITY_ON" = "y" ] && echo "authoritative;" > /etc/dhcp/dhcpd.conf
 
