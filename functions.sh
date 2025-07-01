@@ -162,10 +162,21 @@ dns_out_host() {
 	done
 }
 
+default_cfg() {
+	echo "informe a interface que será utilizada pelo script:"
+	ip l
+	echo
+	read -p "Interface: " IFACE
+
+	sed -i "s/#OPTION=""/OPTION="-4"/" /etc/default/isc-dhcp-server
+	sed -i "s/#INTERFACEv4=""/INTERFACEv4="$IFACE"/" /etc/default/isc-dhcp-server
+}
+
 menu_main() {
 	clear
 	echo "Começando a comfiguração."
 	sleep 1
+	default_cfg
 	echo
 	echo "Esse script aplica por padrão o CIDR /24 na subnet."
 	sleep 1
