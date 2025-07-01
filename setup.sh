@@ -27,7 +27,7 @@ OUT=""
 SYNC_ON=""	
 
 
-. functions.sh
+. f.sh
 
 
 test_user

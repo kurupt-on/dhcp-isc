@@ -26,6 +26,7 @@ sudo ./setup.sh
 ```
 
 - Forneça as informações solicitadas:
+  - **Interface**: Interface que o DHCP utilizará (ex.: `enp0s3`).
   - **Sub-rede**: Ex.: `192.168.1.0` (assume máscara /24).
   - **Gateway**: Ex.: `192.168.1.1`.
   - **DNS**: Endereço do servidor DNS (ex.: `192.168.1.2`).
@@ -109,7 +110,7 @@ cat /var/log/dhcpd-server.log
 ## Arquivos
 
 - `setup.sh`: Script principal que realiza a configuração.
-- `function.sh`: Contém funções reutilizáveis.
+- `functions.sh`: Contém funções reutilizáveis.
 - `dns_out.txt`: Instruções para configurar DDNS com o servidor DNS em outro host.
 - `LICENSE`: Licença do projeto (MIT).
 - `README.md`: Este arquivo de documentação.
