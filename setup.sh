@@ -27,9 +27,9 @@ OUT=""
 SYNC_ON=""	
 
 
-. f.sh
+. functions.sh
 
-
+install_update
 test_user
 menu_main
 restart_dhcpd

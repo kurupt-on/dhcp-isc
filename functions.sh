@@ -200,8 +200,10 @@ default_cfg() {
     echo
     read -p "Interface: " IFACE
     validate_interface "$IFACE"
-    sed -i "s/#OPTION=\"\"/OPTION=\"-4\"/" /etc/default/isc-dhcp-server
-    sed -i "s/#INTERFACEv4=\"\"/INTERFACEv4=\"$IFACE\"/" /etc/default/isc-dhcp-server
+    cat > /etc/default/isc-dhcp-server << EOF
+OPTIONS="-4"
+INTERFACESv4="$IFACE"
+EOF
 }
 
 menu_main() {
