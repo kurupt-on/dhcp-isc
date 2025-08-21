@@ -1,6 +1,6 @@
 # dhcp-isc
 
-Um script Bash para configurar servidores ISC DHCP em sistemas baseados em Debian, com suporte a alocação dinâmica de IPs, integração com DNS Dinâmico (DDNS) e configurações personalizáveis de sub-rede, gateway, DNS e NTP. **Este projeto não é destinado para ambientes de produção.**
+Script interativo em Bash para configurar servidores ISC-DHCP em sistemas baseados no Debian, com suporte a alocação dinâmica de IPs, integração com DNS Dinâmico (DDNS) e configurações personalizáveis de sub-rede, gateway, DNS e NTP. **Este projeto não é destinado para ambientes de produção.**
 
 ## Como Usar
 
@@ -19,7 +19,7 @@ git clone https://github.com/kurupt-on/Dhcp-ISC
 cd Dhcp-ISC
 ```
 
-### 2. Configurar o Servidor DHCP
+### 2. Configure o Servidor DHCP
 
 ```bash
 sudo ./setup.sh
